@@ -36,9 +36,7 @@ function onConnection (conn) {
 			broadcast({ type: 'message', message: data.message, id: conn.id });
 		}
 
-		if ( data.type == 'username' ) {
-			
-		}
+		// TODO: add user name
 	});
 
 	conn.on('close', function onCloseCB () {
