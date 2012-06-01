@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+
+	<meta name="viewport" content="width=device-width, user-scalable=no, maximum-scale=1, initial-scale=1">
+	<meta name="description" content="sockJS chat demo">
+
+	<title>sockJS chat demo</title>
+
+	<script src="http://cdn.sockjs.org/sockjs-0.3.min.js"></script>
+
+<style type="text/css">
+* {
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+#chatWindow {
+	background: #eee;
+	border: 1px solid #aaa;
+	width: 70%;
+	height: 300px;
+	overflow: hidden;
+	position: relative;
+}
+
+input {
+	background: #fff;
+	border: 1px solid #aaa;
+	width: 70%;
+	font-size: 1.1em;
+	padding: 5px;
+}
+
+#chatWindow > div {
+	position: absolute;
+	bottom: 10px;
+	left: 10px;
+}
+
+p {
+	margin: 0 0 0.4em 0;
+	padding: 0;
+}
+
+.system {
+	color:#e44;
+}
+
+.message {
+	color:#222;
+}
+
+.me {
+	color:#00a;
+}
+
+</style>
+
+</head>
+
+<body>
+
+	<div id="chatWindow">
+		<div id="chat">
+			<p class="system">Connecting...</p>
+		</div>
+	</div>
+
+	<form onsubmit="sendMessage();return false"><input id="message" type="text" name="message" placeholder="Type your message here"></form>
+
+<script type="text/javascript">
+var field = document.getElementById('message'),
+	chat = document.getElementById('chat'),
+	sock = new SockJS('http://127.0.0.1:9999/echo'),
+	sockId = false;
+
+sock.onopen = function () {
+	appendMessage('system', 'Connected! Welcome to SockJS chat demo.');
+};
+
+sock.onmessage = function (e) {
+	var data = JSON.parse(e.data);
+
+	switch ( data.type ) {
+		case 'newUser':
+			appendMessage('system', 'A new user has joined');
+			break;
+		case 'message':
+			appendMessage('message', data.message, data.id);
+			break;
+		case 'history':
+			appendMessage('message', data.message);
+			sockId = data.id;
+			break;
+		case 'userLeft':
+			appendMessage('system', 'A user has left');
+			break;
+	}
+}
+
+function appendMessage (type, message, id) {
+	var p, i, l;
+
+	if ( typeof message == 'string' ) message = [message];
+
+	for ( i = 0, l = message.length; i < l; i++ ) {
+		p = document.createElement('p');
+		p.className = type;
+		if ( id === sockId ) {
+			p.className = 'me';
+			p.id = id;
+		}
+		p.innerHTML = message[i].replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+		chat.appendChild(p);
+	}
+}
+
+function sendMessage () {
+	if ( !sockId || !field.value.length ) return;
+
+	sock.send(JSON.stringify({
+		type: 'text',
+		message: field.value.substr(0, 128)
+	}));
+
+	field.value = '';
+}
+
+</script>
+
+</body>
+</html>
