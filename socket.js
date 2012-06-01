@@ -1,6 +1,7 @@
 var http = require('http'),
 	sockjs = require('sockjs'),
 	server = http.createServer(),
+	webSockets,
 	buffer = [],
 	clients = {};
 
